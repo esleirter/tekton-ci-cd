@@ -1,0 +1,47 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: clone-build-push
+spec:
+  workspaces:
+    - name: git-source
+    - name: docker-credentials
+  params:
+    - name: git_revision
+    - name: git_repositoryurl
+    - name: git_full_name
+  tasks:
+    - name: fetch-from-git
+      taskRef:
+        name: git-clone
+      params:
+        - name: url
+          value: $(params.git_repositoryurl) # github.com/esleirter/go-gin-api.git
+        - name: revision
+          value: $(params.git_revision)
+      workspaces:
+        - name: output
+          workspace: git-source
+    - name: show-git-files
+      runAfter: ["fetch-from-git"]
+      taskRef:
+        name: show-git-files
+      workspaces:
+      - name: source
+        workspace: git-source
+    - name: build-push
+      runAfter: [ show-git-files ]
+      taskRef:
+        name: kaniko
+      params:
+        - name: IMAGE
+          value: hub.example.com/$(params.git_full_name):$(params.git_revision)
+        - name: DOCKERFILE
+          value: $(workspaces.source.path)/Dockerfile
+        # - name: EXTRA_ARGS
+        #   value: [ '--no-push' ]
+      workspaces:
+        - name: source
+          workspace: git-source
+        - name: dockerconfig
+          workspace: docker-credentials

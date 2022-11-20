@@ -1,0 +1,12 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: github-binding
+spec:
+  params:
+    - name: git_revision
+      value: $(body.head_commit.id) # Example 53e1881976d4e30f1cc7d4e57cb5720c705b67cc
+    - name: git_repositoryurl
+      value: "https://github.com/$(body.repository.full_name)" # Example https://github.com/esleirter/go-gin-api
+    - name: git_full_name
+      value: $(body.repository.full_name) # Example esleirter/go-gin-api

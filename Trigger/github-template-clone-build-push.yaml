@@ -1,0 +1,45 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: github-template
+spec:
+  params:
+    - name: git_revision
+      description: The git revision
+      default: master
+    - name: git_repositoryurl
+      description: The git repository url
+    - name: git_full_name
+      description: The full Porject Name
+  resourcetemplates:
+      # the section below is exactly the same as writing a PipelineRun
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: clone-build-push-run-
+      spec:
+        pipelineRef:
+          name: clone-build-push
+        podTemplate:
+          securityContext:
+            fsGroup: 65532
+        params:
+          - name: git_revision
+            value: $(tt.params.git_revision)
+          - name: git_repositoryurl
+            value: $(tt.params.git_repositoryurl)
+          - name: git_full_name
+            value: $(tt.params.git_full_name)
+        workspaces:
+          - name: git-source
+            volumeClaimTemplate:
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 1Gi
+          - name: docker-credentials
+            secret:
+              secretName: docker-credentials
+

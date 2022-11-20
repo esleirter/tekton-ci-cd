@@ -1,0 +1,14 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: show-git-files
+  description: Display files for the repo.
+spec:
+  workspaces:
+  - name: source
+  steps:
+  - name: read
+    image: alpine:latest
+    script: | 
+      #!/usr/bin/env sh
+      ls -lh $(workspaces.source.path)
